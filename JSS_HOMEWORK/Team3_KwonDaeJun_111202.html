@@ -1,0 +1,172 @@
+<!--
+
+기본적으로 게임 클래스는 생성자로 만들고..
+게임의 시작은 new 연산자로 인스턴스가 만들어지면서 시작됩니다.
+인스턴스가 만들어질때 내부적으로 랜덤 숫자 3개를 셋팅하고(겹치는 숫자는 안되겠지요.)
+(이 경우에 var num1 = Math.ceil(Math.random() * 9); 하면 얻을 수 있습니다. 
+random() 은 0~1 사이의 난수를 발생시키는 Math의 클래스 메서드 이며, ceil()역시 Math의 클래스 메서드 이며 소수 버리고 올리는 메서드입니다.)
+
+클로저를 이용해서 이렇게 생성된 숫자에는 읽는것은 가능하되 쓰는 것은 안되게끔 해보면 좋을듯합니다~
+
+메소드를 만들고 숫자를 인자로 호출하여 내부적으로 생성된 숫자와 비교하여
+숫자 야구 룰에 해당되는 결과 값을 받습니다. (아웃이냐, 1s 1b 이냐 에 해당되는 결과)
+결과는 배열에 담고 화면에 보여주도록 하지요..
+아웃이 되면 유저의 승리가 됩니다.
+
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<title>BaseBallGame</title>
+		
+		<style type="text/css">
+			BODY {
+				background-image: url("http://cfile231.uf.daum.net/image/11670A164B4594BC5C20A0");
+				background-repeat: no-repeat;
+				background-size: cover;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>~신나는 야구게임~</h1>
+		<div id="main">
+			<input type="button" id="startBtn" value="시작하기" onclick=""/>
+			
+			<div id="playGround">
+				
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		var startBtn = document.getElementById("startBtn");
+		
+		//객체생성
+		BaseBallGame = function(){
+			
+			this.getNum = function(){
+				return this.RandomNums;
+			};
+
+			//숫자 생성
+			this.makeRandomNumber = function(){
+				
+				this.RandomNums = new Array();
+				
+				var count = 0;
+				while(count != 3)
+				{
+					var temp = Math.ceil(Math.random() * 9);
+					var flag = true;
+					for (var i=0; i < count; i++) {
+						if(this.RandomNums[i] == temp)
+							flag = false;
+					};
+					if(flag)
+					{
+						this.RandomNums.push(temp);
+						count++;
+					}
+				}				
+			};
+			
+			//숫자 비교
+			this.compareNum = function(inputNums){
+
+				var strike = 0;
+				var ball = 0;
+				
+				/*
+				 * 객체에 생성된 초기 값과 입력받은 변수를 비교한다.
+				 * 일치하는 경우 index를 비교하여
+				 * 일치하면 strike, 일치하지 않으면 ball 처리한다.
+				 */				
+				for (var i=0; i < this.RandomNums.length; i++) {
+					for (var j=0; j < inputNums.length; j++) {
+					  if(this.RandomNums[i] == inputNums[j]){
+					  	var rIdx = this.getIndex(this.RandomNums, this.RandomNums[i]);
+					  	var iIdx = this.getIndex(inputNums, inputNums[j]);
+					  	
+					  	if(rIdx == iIdx) strike++;
+					  	else ball++;
+					  }
+					};
+				};
+				
+				return [strike, ball];
+			};
+			
+			this.getIndex = function(array, value){
+				for (var i=0; i < array.length; i++) {
+				  if(array[i] == value)
+				  	return i;
+				};
+			}
+		}
+		
+		//객체를 전역변수로 생성
+		var bb = '';
+		startBtn.onclick = function(){
+			startBtn.style.visibility = 'hidden';
+			document.getElementById('playGround').innerHTML = '<input type="text" id="num1" value=""/>';
+			document.getElementById('playGround').innerHTML += '<input type="text" id="num2" value=""/>';
+			document.getElementById('playGround').innerHTML += '<input type="text" id="num3" value=""/>';
+			document.getElementById('playGround').innerHTML += '<input type="button" id="playBtn" value="실행" onclick=""/>';
+			document.getElementById('playGround').innerHTML += '<div id="result">숫자를 입력하고 실행 버튼을 누르세요.<div>';
+			var playBtn = document.getElementById("playBtn");
+
+			bb = new BaseBallGame();
+			bb.makeRandomNumber();
+			
+			var count = 1;
+			playBtn.onclick = function(){
+				if(count == 10) {gameSet('lose'); return;}
+
+				var inputNums = checkInputNums();
+				if(inputNums == '' || inputNums == undefined) return;
+				
+				var result = bb.compareNum(inputNums);
+				if(result[0] == 3) { gameSet('victory'); return; }
+				document.getElementById('result').innerHTML += count +'회 결과 : ';
+				document.getElementById('result').innerHTML += result[0] + ' Strike, ' + result[1] + ' Ball <br>';
+				count++;
+			}
+			
+		}
+		
+		//게임 승리/패배 처리 메소드
+		function gameSet(result){
+			result = (result == 'victory') ? '승리' : '패배';
+			
+			document.getElementById('main').innerHTML = '<font size="20">'+result+'</font><br>';
+			document.getElementById('main').innerHTML += '<font size="17"> 정답 : '+bb.getNum()+'</font><br>';
+			document.getElementById('main').innerHTML += '<input type="button" id="reStartBtn" value="다시 시작하기" onclick="startBtn.onclick()"/>';
+			reStartBtn.onclick = function(){
+				document.getElementById('main').innerHTML = '<div id="playGround"></div>';
+				startBtn.onclick();
+			}
+			return;
+		}
+		
+		// 입력받은 값 체크
+		function checkInputNums(){
+			var num1 = document.getElementById('num1').value - 0;
+			var num2 = document.getElementById('num2').value - 0;
+			var num3 = document.getElementById('num3').value - 0;
+			
+			if(num1 == '' || num2 == '' || num3 == ''
+			|| isNaN(num1) || isNaN(num2) || isNaN(num3)
+			|| num1 > 9 || num1 == '0' || num2 > 9 || num2 == '0' 
+			|| num3 > 9 || num3 == '0' || num1 == num2 || num2 == num3
+			|| num1 == num3)
+			{
+				alert('잘못된 값이 입력되었습니다.');
+				return;
+			}
+			
+			return [num1, num2, num3];
+		}
+		
+	</script>
+</html>
